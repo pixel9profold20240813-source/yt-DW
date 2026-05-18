@@ -1,12 +1,7 @@
-from flask import Flask, render_template, request, send_file
-import yt_dlp
-import os
+from flask import Flask, render_template, request, redirect
+import requests
 
 app = Flask(__name__)
-DOWNLOAD_FOLDER = 'downloads'
-
-if not os.path.exists(DOWNLOAD_FOLDER):
-    os.makedirs(DOWNLOAD_FOLDER)
 
 @app.route('/')
 def index():
@@ -18,21 +13,38 @@ def download():
     if not video_url:
         return "請提供有效的 YouTube 網址", 400
 
-    # 雲端優化設定：下載最大 720p 的一體成型 MP4 檔案，不進行耗費效能的影音合併
-    ydl_opts = {
-        'format': 'best[ext=mp4][height<=720]/best',
-        'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(title)s.%(ext)s'),
-        'quiet': True,
-        'noplaylist': True
+    # 使用開源的 Cobalt API，它會自動處理 YouTube 的機器人驗證與 IP 封鎖問題
+    cobalt_api_url = "https://api.cobalt.tools/api/json"
+    
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+    }
+    
+    # 設定下載參數（限制 720p 確保速度與穩定度）
+    payload = {
+        "url": video_url,
+        "vQuality": "720",
+        "isAudioOnly": False
     }
 
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=True)
-            filename = ydl.prepare_filename(info)
-            return send_file(filename, as_attachment=True)
+        # 向 API 發送請求
+        response = requests.post(cobalt_api_url, json=payload, headers=headers)
+        res_data = response.json()
+        
+        # 取得直接下載的影片連結
+        download_url = res_data.get("url")
+        
+        if download_url:
+            # 直接讓使用者的瀏覽器重新導向到這個高速下載連結
+            return redirect(download_url)
+        else:
+            error_msg = res_data.get("text", "未知錯誤")
+            return f"解析失敗，原因: {error_msg}", 500
+            
     except Exception as e:
-        return f"下載過程中發生錯誤: {str(e)}", 500
+        return f"連線到解析伺服器失敗: {str(e)}", 500
 
 if __name__ == '__main__':
     app.run(debug=False)
