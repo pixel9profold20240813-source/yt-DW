@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雲端影片下載器</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
+        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        button { background-color: #ff0000; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+        button:disabled { background-color: #ccc; }
+        .loading { display: none; margin-top: 15px; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>個人雲端影片下載器</h2>
+    <form action="/download" method="POST" onsubmit="showLoading()">
+        <input type="text" name="url" placeholder="請貼上 YouTube 影片網址" required>
+        <button type="submit" id="submitBtn">開始下載</button>
+    </form>
+    <div class="loading" id="loadingText">伺服器正在雲端下載並傳送中...<br>請勿關閉網頁，稍候片刻會自動彈出下載視窗。</div>
+</div>
+<script>
+    function showLoading() {
+        document.getElementById('loadingText').style.display = 'block';
+        document.getElementById('submitBtn').disabled = true;
+    }
+</script>
+</body>
+</html>
